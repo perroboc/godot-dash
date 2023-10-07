@@ -1,0 +1,21 @@
+name: Create Godot documentation docset
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-docset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Download Godot documentation
+        run: |
+          curl -L https://nightly.link/godotengine/godot-docs/workflows/build_offline_docs/master/godot-docs-html-master.zip -o godot-docs.zip
+          unzip godot-docs.zip -d godot-docs
+      - name: Install doc2dash
+        run: pip install doc2dash
+      - name: Create docset
+        run: doc2dash -n Godot -d docsets/godot godot-docs
