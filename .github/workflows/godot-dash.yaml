@@ -15,7 +15,17 @@ jobs:
         run: |
           curl -L https://nightly.link/godotengine/godot-docs/workflows/build_offline_docs/master/godot-docs-html-master.zip -o godot-docs.zip
           unzip godot-docs.zip -d godot-docs
-      - name: Install doc2dash
-        run: pip install doc2dash
       - name: Create docset
-        run: doc2dash -n Godot -d docsets/godot godot-docs
+        run: pipx run doc2dash -n Godot -d docsets/godot godot-docs
+      - name: Generate XML feed
+        run: pipx run doc2dash --name Godot --add-to-global docsets/godot/Godot.docset
+      - name: Save docset as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: godot-docset
+          path: docsets/godot/Godot.docset
+      - name: Save XML feed as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: godot-xml-feed
+          path: docsets/godot/Godot.xml
