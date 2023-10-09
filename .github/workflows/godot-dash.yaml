@@ -27,10 +27,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install pipx
-        run: python -m ensurepip --upgrade && pip install pipx
-      - name: Install doc2dash
-        run: pipx install doc2dash
       - name: Clone Godot documentation repository
         run: git clone -b ${{ matrix.godot }} https://github.com/godotengine/godot-docs.git
       - name: Get the date of the latest commit
