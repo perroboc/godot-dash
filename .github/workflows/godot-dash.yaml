@@ -32,7 +32,7 @@ jobs:
         run: git clone -b ${{ matrix.godot }} https://github.com/godotengine/godot-docs.git
       - name: Get the date of the latest commit
         working-directory: godot-docs
-        run: sed -i "s/version_replace/$(echo "$(git log -1 --format=%cd --date=short)")/g" feed.xml && mv feed.xml feed-${{ matrix.godot }}.xml
+        run: sed -i "s/version_replace/$(echo "$(git log -1 --format=%cd --date=short)")/g" ../feed.xml && mv ../feed.xml ../feed-${{ matrix.godot }}.xml
       - name: Install Sphinx and dependencies
         working-directory: godot-docs
         run: pip install -r requirements.txt
