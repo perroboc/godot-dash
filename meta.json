@@ -1,6 +1,6 @@
 {
     "extra": {
-        "isJavaScriptEnabled": false
+        "isJavaScriptEnabled": true
     },
     "name": "Godot",
     "revision": 0,

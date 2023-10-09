@@ -1,10 +1,11 @@
 name: Build Godot documentation docset
 
 on:
+  schedule:
+    - cron: '0 0 * * TUE'
   push:
     branches:
       - main
-  # TO DO: Every tuesday at 00:00 UTC
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -44,7 +45,7 @@ jobs:
         run: sphinx-build -M html -d _build/doctrees '.' _build/html
       - name: Create docset
         working-directory: godot-docs
-        run: pipx run doc2dash --name godot --destination .. --online-redirect-url https://github.com/godotengine/godot-docs _build/html && cd ..
+        run: pipx run doc2dash --name godot --destination .. --online-redirect-url https://github.com/godotengine/godot-docs _build/html --enable-js
       - name: Add icon & meta.json files
         run: cp -f icon.png godot.docset/icon.png && cp -f meta.json godot.docset/meta.json
       - name: Update meta file version
