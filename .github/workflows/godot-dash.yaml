@@ -35,7 +35,7 @@ jobs:
       - name: Install Sphinx and dependencies
         run: pip install -r godot-docs/requirements.txt
       - name: Build documentation
-        run: cd godot-docs && make html
+        run: cd godot-docs && sphinx-build -M html -d _build/doctrees '.' _build/html --j auto
       - name: Create docset
         run: pipx run doc2dash --name godot --destination .. --online-redirect-url https://github.com/godotengine/godot-docs _build/html && cd ..
       - name: Add icon & meta.json files
