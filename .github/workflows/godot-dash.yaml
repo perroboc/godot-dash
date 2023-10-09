@@ -38,7 +38,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Build documentation
         working-directory: godot-docs
-        run: sphinx-build -M html -d _build/doctrees '.' _build/html -j auto
+        run: sphinx-build -M html -d _build/doctrees '.' _build/html
       - name: Create docset
         working-directory: godot-docs
         run: pipx run doc2dash --name godot --destination .. --online-redirect-url https://github.com/godotengine/godot-docs _build/html && cd ..
