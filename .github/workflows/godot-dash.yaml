@@ -1,10 +1,10 @@
 name: Build Godot documentation docset
 
 on:
-  workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
+  # TO DO: Every tuesday at 00:00 UTC
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -33,9 +33,9 @@ jobs:
       - name: Update feed.xml
         working-directory: godot-docs
         run: |
-          sed -i "s/git_replace/$(echo "$(git log -1 --format=%cd --date=short)")/g" ../feed.xml
+          sed -i "s/git_replace/${{ matrix.godot_version }}.$(echo "$(git log -1 --format=%cd --date=format:%Y%m%d)")/g" ../feed.xml
           sed -i "s/version_replace/${{ matrix.godot_version }}/g" ../feed.xml
-          mv ../feed.xml ../feed-${{ matrix.godot_version }}.xml 
+          mv ../feed.xml ../godot-${{ matrix.godot_version }}.xml 
       - name: Install Sphinx and dependencies
         working-directory: godot-docs
         run: pip install -r requirements.txt
@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: xml-feeds
-          path: feed-${{ matrix.godot_version }}.xml
+          path: godot-${{ matrix.godot_version }}.xml
       - name: Save index as artifact
         uses: actions/upload-artifact@v2
         with:
