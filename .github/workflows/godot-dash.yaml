@@ -58,6 +58,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    needs: build-docset
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
