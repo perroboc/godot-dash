@@ -24,15 +24,19 @@ jobs:
     strategy:
       matrix:
         # godot: [ '3.5', '3.6', '4.0', '4.1', 'stable' ]
-        godot: [ '3.5', '3.6' ]
+        godot_version: [ '3.5', '3.6' ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Clone Godot documentation repository
-        run: git clone -b ${{ matrix.godot }} https://github.com/godotengine/godot-docs.git
-      - name: Get the date of the latest commit
+        run: git clone -b ${{ matrix.godot_version }} https://github.com/godotengine/godot-docs.git
+      - name: Update feed.xml
         working-directory: godot-docs
-        run: sed -i "s/version_replace/$(echo "$(git log -1 --format=%cd --date=short)")/g" ../feed.xml && mv ../feed.xml ../feed-${{ matrix.godot }}.xml
+        run: |
+          sed -i "s/git_replace/$(echo "$(git log -1 --format=%cd --date=short)")/g" ../feed.xml
+          sed -i "s/url_replace/${{ steps.deployment.outputs.page_url }}/g" ../feed.xml
+          sed -i "s/version_replace/${{ matrix.godot_version }}/g" ../feed.xml
+          mv ../feed.xml ../feed-${{ matrix.godot_version }}.xml 
       - name: Install Sphinx and dependencies
         working-directory: godot-docs
         run: pip install -r requirements.txt
@@ -44,20 +48,20 @@ jobs:
         run: pipx run doc2dash --name godot --destination .. --online-redirect-url https://github.com/godotengine/godot-docs _build/html && cd ..
       - name: Add icon & meta.json files
         run: cp -f icon.png godot.docset/icon.png && cp -f meta.json godot.docset/meta.json
-      - name: Modify JSON file
-        run: sed -i "s/version_replace/${{ matrix.godot }}/g" godot.docset/meta.json
+      - name: Update meta file version
+        run: sed -i "s/version_replace/${{ matrix.godot_version }}/g" godot.docset/meta.json
       - name: Archive docset
-        run: tar --exclude='.DS_Store' -czf godot-${{ matrix.godot }}.tgz godot.docset
+        run: tar --exclude='.DS_Store' -czf godot-${{ matrix.godot_version }}.tgz godot.docset
       - name: Save docset as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: godot-docset-${{ matrix.godot }}
-          path: godot-${{ matrix.godot }}.tgz
+          name: godot-docsets
+          path: godot-${{ matrix.godot_version }}.tgz
       - name: Save last_modified as artifact
         uses: actions/upload-artifact@v2
         with:
           name: xml-feeds
-          path: feed-${{ matrix.godot }}.xml
+          path: feed-${{ matrix.godot_version }}.xml
   deploy:
     environment:
       name: github-pages
@@ -65,10 +69,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-docset
     steps:
-      - name: Download artifacts
+      - name: Download feed artifacts
         uses: actions/download-artifact@v2
         with:
           name: xml-feeds
+      - name: Download docset artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: godot-docsets
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
