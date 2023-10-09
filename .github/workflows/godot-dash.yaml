@@ -23,14 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        godot: [ '3.5', '3.6', '4.0', '4.1','master' ]
+        godot: [ '3.5', '3.6', '4.0', '4.1', 'stable' ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Clone Godot documentation repository
         run: git clone -b ${{ matrix.godot }} https://github.com/godotengine/godot-docs.git
       - name: Get the date of the latest commit
-        run: sed -i "s/version_replace/$(echo "$(git log -1 --format=%cd --date=short master)")/g" feed.xml && mv feed.xml feed-${{ matrix.godot }}.xml
+        run: sed -i "s/version_replace/$(echo "$(git log -1 --format=%cd --date=short ${{ matrix.godot }})")/g" feed.xml && mv feed.xml feed-${{ matrix.godot }}.xml
       - name: Install Sphinx and dependencies
         run: pip install -r godot-docs/requirements.txt
       - name: Build documentation
