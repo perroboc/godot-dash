@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # godot: [ '3.5', '3.6', '4.0', '4.1', 'stable' ]
-        godot_version: [ '3.5', '3.6' ]
+        godot: [ '3.5', '3.6', '4.0', '4.1', 'stable' ]
+        # godot_version: [ '3.5', '3.6' ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -34,7 +34,6 @@ jobs:
         working-directory: godot-docs
         run: |
           sed -i "s/git_replace/$(echo "$(git log -1 --format=%cd --date=short)")/g" ../feed.xml
-          sed -i "s/url_replace/${{ steps.deployment.outputs.page_url }}/g" ../feed.xml
           sed -i "s/version_replace/${{ matrix.godot_version }}/g" ../feed.xml
           mv ../feed.xml ../feed-${{ matrix.godot_version }}.xml 
       - name: Install Sphinx and dependencies
@@ -62,6 +61,11 @@ jobs:
         with:
           name: xml-feeds
           path: feed-${{ matrix.godot_version }}.xml
+      - name: Save index as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: index
+          path: index.html
   deploy:
     environment:
       name: github-pages
@@ -77,6 +81,10 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: godot-docsets
+      - name: Download index artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: index
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
