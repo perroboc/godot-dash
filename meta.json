@@ -1,0 +1,9 @@
+{
+    "extra": {
+        "isJavaScriptEnabled": false
+    },
+    "name": "Godot_4",
+    "revision": 0,
+    "title": "Godot 4",
+    "version": "master"
+}

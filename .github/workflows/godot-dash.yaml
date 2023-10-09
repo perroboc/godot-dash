@@ -1,24 +1,82 @@
-name: Create Godot documentation docset
+name: Build Godot documentation docset
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  create-docset:
+  build-docset:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        godot: [ '3.5', '3.6', '4.0', '4.1','master' ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Download Godot documentation
-        run: |
-          curl -L https://nightly.link/godotengine/godot-docs/workflows/build_offline_docs/master/godot-docs-html-master.zip -o godot-docs.zip
-          unzip godot-docs.zip -d godot-docs
+      - name: Install pipx
+        run: python -m ensurepip --upgrade && pip install pipx
+      - name: Install doc2dash
+        run: pipx install doc2dash
+      - name: Clone Godot documentation repository
+        run: git clone -b ${{ matrix.godot }} https://github.com/godotengine/godot-docs.git
+      - name: Get the date of the latest commit
+        run: sed -i "s/1111/$(echo "$(git log -1 --format=%cd --date=short master)")/g" feed.xml && mv feed.xml feed-${{ matrix.godot }}.xml
+      - name: Install Sphinx and dependencies
+        run: pip install -r godot-docs/requirements.txt
+      - name: Build documentation
+        run: cd godot-docs && make html
       - name: Create docset
-        run: pipx run doc2dash -n Godot -d docsets/godot godot-docs
+        run: pipx run doc2dash --name godot --destination .. --online-redirect-url https://github.com/godotengine/godot-docs _build/html && cd ..
+      - name: Add icon & meta.json files
+        run: cp -f icon.png godot.docset/icon.png && cp -f meta.json godot.docset/meta.json
+      - name: Modify JSON file
+        uses: actions/json@v1
+        with:
+          file: godot.docset/meta.json
+          args: set version ${{ matrix.godot }}
+      - name: Archive docset
+        run: tar --exclude='.DS_Store' -czf godot-${{ matrix.godot }}.tgz godot.docset
       - name: Save docset as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: godot-docset
-          path: docsets/godot/Godot.docset
+          name: godot-docset-${{ matrix.godot }}
+          path: godot-${{ matrix.godot }}.tgz
+      - name: Save last_modified as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: xml-feeds
+          path: feed-${{ matrix.godot }}.xml
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: xml-feeds
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # Upload entire repository
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
