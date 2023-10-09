@@ -34,7 +34,7 @@ jobs:
       - name: Clone Godot documentation repository
         run: git clone -b ${{ matrix.godot }} https://github.com/godotengine/godot-docs.git
       - name: Get the date of the latest commit
-        run: sed -i "s/1111/$(echo "$(git log -1 --format=%cd --date=short master)")/g" feed.xml && mv feed.xml feed-${{ matrix.godot }}.xml
+        run: sed -i "s/version_replace/$(echo "$(git log -1 --format=%cd --date=short master)")/g" feed.xml && mv feed.xml feed-${{ matrix.godot }}.xml
       - name: Install Sphinx and dependencies
         run: pip install -r godot-docs/requirements.txt
       - name: Build documentation
@@ -44,10 +44,7 @@ jobs:
       - name: Add icon & meta.json files
         run: cp -f icon.png godot.docset/icon.png && cp -f meta.json godot.docset/meta.json
       - name: Modify JSON file
-        uses: actions/json@v1
-        with:
-          file: godot.docset/meta.json
-          args: set version ${{ matrix.godot }}
+        run: sed -i "s/version_replace/${{ matrix.godot }}/g" godot.docset/meta.json
       - name: Archive docset
         run: tar --exclude='.DS_Store' -czf godot-${{ matrix.godot }}.tgz godot.docset
       - name: Save docset as artifact
